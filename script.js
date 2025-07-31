@@ -80,9 +80,11 @@ function updateUI() {
     
     // Update last tip info
     if (lastTip) {
-        const tipAmount = lastTip.card_data?.credits_spent || 'unknown';
+        const tipAmount = lastTip.card_data?.credits_spent || 0;
+        const burnedAmount = tipAmount / 2;
+        const receivedAmount = tipAmount / 2;
         const author = lastTip.author.username;
-        lastTipInfoEl.textContent = `Last burn: ${tipAmount} credits by @${author}`;
+        lastTipInfoEl.innerHTML = `Last move: @${author} spent <b>${tipAmount}</b> credits. <br> (<b>${burnedAmount}</b> burned 🔥, <b>${receivedAmount}</b> to @${projectOwner.username} 💰)`;
     } else {
         lastTipInfoEl.textContent = 'No one has burned credits yet. Be the first!';
     }
@@ -116,7 +118,6 @@ function updateUI() {
             break;
     }
 }
-
 
 // --- API & Event Handlers ---
 async function handleBurnClick() {
@@ -168,7 +169,6 @@ function handleNewComment(data) {
     }
 }
 
-
 // --- History Rendering ---
 async function loadTipHistory() {
     try {
@@ -213,7 +213,10 @@ function createCommentElement(comment) {
 
     const sanitizedHtml = DOMPurify.sanitize(marked.parse(comment.raw_content || ''));
 
-    const tipAmount = comment.card_data?.credits_spent || '??';
+    const totalAmount = comment.card_data?.credits_spent || 0;
+    const burnedAmount = totalAmount / 2;
+    const receivedAmount = totalAmount / 2;
+
     const avatarUrl = comment.author.avatar_url || `https://images.websim.com/avatar/${comment.author.username}`;
 
     div.innerHTML = `
@@ -221,10 +224,14 @@ function createCommentElement(comment) {
             <div class="comment-author">
                 <img src="${avatarUrl}" alt="${comment.author.username}'s avatar">
                 <span>@${comment.author.username}</span>
-                ${isTipOwner ? '<span>(Owner)</span>' : ''}
+                ${isTipOwner ? '<span class="owner-tag">(Owner)</span>' : ''}
             </div>
             <div class="comment-tip">
-                ${tipAmount} 🔥
+                <div class="tip-total">Spent: <b>${totalAmount}</b> credits</div>
+                <div class="tip-breakdown">
+                    <span class="burned">-${burnedAmount} 🔥</span>
+                    <span class="received">+${receivedAmount} 💰</span>
+                </div>
             </div>
         </div>
         <div class="comment-content">${sanitizedHtml}</div>
@@ -235,4 +242,3 @@ function createCommentElement(comment) {
 
 // --- Start the App ---
 init();
-

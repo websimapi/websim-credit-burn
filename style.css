@@ -9,6 +9,7 @@
     --border-radius: 8px;
     --font-header: 'Orbitron', sans-serif;
     --font-body: 'Roboto', sans-serif;
+    --red-color: #e74c3c;
 }
 
 body {
@@ -91,6 +92,7 @@ header p {
     margin-top: 10px;
     color: var(--text-muted-color);
     min-height: 20px;
+    line-height: 1.5;
 }
 
 #action-area {
@@ -198,6 +200,15 @@ header p {
     font-weight: bold;
 }
 
+.comment-author .owner-tag {
+    font-size: 0.8em;
+    font-weight: normal;
+    background-color: var(--owner-color);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
 .comment-author img {
     width: 30px;
     height: 30px;
@@ -205,9 +216,42 @@ header p {
 }
 
 .comment-tip {
-    font-weight: bold;
+    font-size: 0.9em;
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.tip-total {
+    color: var(--text-muted-color);
+}
+
+.tip-total b {
+    color: var(--text-color);
     font-family: var(--font-header);
-    color: var(--primary-color);
+}
+
+.tip-breakdown {
+    display: flex;
+    gap: 12px;
+    font-family: var(--font-header);
+    font-weight: bold;
+}
+
+.tip-breakdown .burned {
+    color: var(--red-color);
+}
+
+.tip-breakdown .received {
+    color: var(--owner-color);
+}
+
+.comment-content {
+    margin: 15px 0;
+    padding: 10px;
+    background-color: rgba(0,0,0,0.15);
+    border-radius: 4px;
 }
 
 .comment-content p:first-child {
@@ -228,4 +272,3 @@ footer {
     color: var(--text-muted-color);
     font-size: 0.8em;
 }
-
