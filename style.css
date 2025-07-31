@@ -1,0 +1,231 @@
+:root {
+    --background-color: #1a1a1a;
+    --surface-color: #2c2c2c;
+    --primary-color: #ff4500;
+    --text-color: #e0e0e0;
+    --text-muted-color: #a0a0a0;
+    --owner-color: #4CAF50;
+    --user-color: #3498db;
+    --border-radius: 8px;
+    --font-header: 'Orbitron', sans-serif;
+    --font-body: 'Roboto', sans-serif;
+}
+
+body {
+    font-family: var(--font-body);
+    background-color: var(--background-color);
+    color: var(--text-color);
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+#app {
+    width: 100%;
+    max-width: 700px;
+    background-color: var(--surface-color);
+    border-radius: var(--border-radius);
+    padding: 20px 40px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+header {
+    text-align: center;
+    margin-bottom: 30px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 20px;
+}
+
+header h1 {
+    font-family: var(--font-header);
+    color: var(--primary-color);
+    margin: 0;
+}
+
+header p {
+    color: var(--text-muted-color);
+    font-size: 0.9em;
+}
+
+#game-state {
+    background: rgba(0,0,0,0.2);
+    padding: 20px;
+    border-radius: var(--border-radius);
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+#status-indicator {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-header);
+    font-size: 1.5em;
+    font-weight: 700;
+}
+
+#status-text {
+    transition: color 0.3s ease;
+}
+
+.spinner {
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-top-color: var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    display: none; /* Hidden by default */
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+#last-tip-info {
+    margin-top: 10px;
+    color: var(--text-muted-color);
+    min-height: 20px;
+}
+
+#action-area {
+    margin-bottom: 30px;
+    text-align: center;
+}
+#action-header {
+    margin-bottom: 15px;
+    font-weight: bold;
+    min-height: 22px;
+}
+
+#comment-input {
+    width: 100%;
+    box-sizing: border-box;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: var(--border-radius);
+    padding: 10px;
+    font-family: var(--font-body);
+    resize: vertical;
+    margin-bottom: 15px;
+}
+
+#burn-button {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    border-radius: var(--border-radius);
+    font-size: 1.1em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.1s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#burn-button:hover:not(:disabled) {
+    background-color: #ff6a33;
+}
+
+#burn-button:active:not(:disabled) {
+    transform: scale(0.98);
+}
+
+#burn-button:disabled {
+    background-color: #555;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.error-message {
+    color: #ff4d4d;
+    margin-top: 10px;
+    min-height: 18px;
+}
+
+#burn-history {
+    margin-top: 20px;
+}
+
+#burn-history h2 {
+    text-align: center;
+    font-family: var(--font-header);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+#comments-container {
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: 10px;
+}
+
+.comment-card {
+    background: rgba(0,0,0,0.2);
+    border-left: 4px solid var(--primary-color);
+    padding: 15px;
+    border-radius: var(--border-radius);
+    margin-bottom: 15px;
+}
+
+.comment-card.owner-tip {
+    border-left-color: var(--owner-color);
+}
+.comment-card.user-tip {
+    border-left-color: var(--user-color);
+}
+
+.comment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.comment-author {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: bold;
+}
+
+.comment-author img {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+}
+
+.comment-tip {
+    font-weight: bold;
+    font-family: var(--font-header);
+    color: var(--primary-color);
+}
+
+.comment-content p:first-child {
+    margin-top: 0;
+}
+.comment-content p:last-child {
+    margin-bottom: 0;
+}
+
+.comment-date {
+    font-size: 0.8em;
+    color: var(--text-muted-color);
+}
+
+footer {
+    text-align: center;
+    margin-top: 30px;
+    color: var(--text-muted-color);
+    font-size: 0.8em;
+}
+
