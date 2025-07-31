@@ -177,7 +177,11 @@ function handleNewComment(data) {
 
         // Update totals
         totalBurned += tipAmount / 2;
-        if (newComment.author.id !== projectOwner.id) {
+        if (newComment.author.id === projectOwner.id) {
+            // Owner tipped, so they spent `tipAmount` and got half back. Net loss of half.
+            totalEarned -= tipAmount / 2;
+        } else {
+            // User tipped, owner receives half.
             totalEarned += tipAmount / 2;
         }
         updateTotalStats();
@@ -224,7 +228,11 @@ async function loadTipHistory() {
 
             // Calculate totals
             totalBurned += tipAmount / 2;
-            if (comment.author.id !== projectOwner.id) {
+            if (comment.author.id === projectOwner.id) {
+                // Owner tipped, so they spent `tipAmount` and got half back. Net loss of half.
+                totalEarned -= tipAmount / 2;
+            } else {
+                // User tipped, owner receives half.
                 totalEarned += tipAmount / 2;
             }
 
