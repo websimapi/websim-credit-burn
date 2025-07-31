@@ -12,6 +12,7 @@ const spinnerEl = document.querySelector('.spinner');
 const actionHeaderEl = document.getElementById('action-header');
 const totalStatsEl = document.getElementById('total-stats');
 const leaderboardListEl = document.getElementById('leaderboard-list');
+const actionAreaEl = document.getElementById('action-area');
 
 // --- State ---
 let projectId = null;
@@ -91,26 +92,37 @@ function updateUI() {
         case 'USER_TURN':
             statusTextEl.textContent = "User's Turn to Burn";
             statusTextEl.style.color = 'var(--user-color)';
-            actionHeaderEl.textContent = `Your turn, @${currentUser?.username || 'user'}!`;
-            burnButton.disabled = isSubmitting;
+            if (isOwner) {
+                actionHeaderEl.textContent = `Waiting for a user to burn...`;
+                actionAreaEl.style.display = 'none';
+            } else {
+                actionHeaderEl.textContent = `Your turn, @${currentUser?.username || 'user'}!`;
+                actionAreaEl.style.display = 'block';
+                burnButton.disabled = isSubmitting;
+            }
             break;
         case 'OWNER_TURN':
             statusTextEl.textContent = "Owner's Turn to Match";
             statusTextEl.style.color = 'var(--owner-color)';
             if (isOwner) {
                 actionHeaderEl.textContent = `Your turn, @${projectOwner.username}! Match the burn.`;
+                actionAreaEl.style.display = 'block';
                 burnButton.disabled = isSubmitting;
             } else {
                 actionHeaderEl.textContent = `Waiting for @${projectOwner.username} to match the burn...`;
-                burnButton.disabled = true;
+                actionAreaEl.style.display = 'none';
             }
             break;
         case 'INITIALIZING':
             statusTextEl.textContent = 'Initializing...';
+            actionHeaderEl.textContent = '';
+            actionAreaEl.style.display = 'none';
             burnButton.disabled = true;
             break;
         case 'ERROR':
             statusTextEl.textContent = 'Error';
+            actionHeaderEl.textContent = '';
+            actionAreaEl.style.display = 'none';
             burnButton.disabled = true;
             break;
     }
