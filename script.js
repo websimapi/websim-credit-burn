@@ -23,7 +23,7 @@ let lastTip = null;
 let isSubmitting = false;
 let totalBurned = 0;
 let totalEarned = 0;
-let allTipComments = [];
+let allTips = []; // Store all tip comments for leaderboard
 
 // --- Main ---
 async function init() {
@@ -40,8 +40,8 @@ async function init() {
         projectOwner = owner;
         isOwner = currentUser && projectOwner && currentUser.id === projectOwner.id;
 
-        await fetchLastTipAndSetState();
         await loadTipHistory();
+        await fetchLastTipAndSetState();
 
         burnButton.addEventListener('click', handleBurnClick);
         window.websim.addEventListener('comment:created', handleNewComment);
@@ -55,29 +55,21 @@ async function init() {
 
 // --- State & UI Logic ---
 async function fetchLastTipAndSetState() {
+    // We already have the tips, so we can determine state from `allTips`
     spinnerEl.style.display = 'block';
-    try {
-        const response = await fetch(`/api/v1/projects/${projectId}/comments?only_tips=true&first=1`);
-        if (!response.ok) throw new Error(`API error: ${response.status}`);
-        const data = await response.json();
-        
-        lastTip = data.comments.data.length > 0 ? data.comments.data[0].comment : null;
 
-        if (!lastTip) {
-            gameState = 'USER_TURN';
-        } else if (lastTip.author.id === projectOwner.id) {
-            gameState = 'USER_TURN';
-        } else {
-            gameState = 'OWNER_TURN';
-        }
-    } catch (error) {
-        console.error("Error fetching last tip:", error);
-        actionErrorEl.textContent = "Could not fetch game state.";
-        gameState = 'ERROR';
-    } finally {
-        spinnerEl.style.display = 'none';
-        updateUI();
+    lastTip = allTips.length > 0 ? allTips[0] : null;
+
+    if (!lastTip) {
+        gameState = 'USER_TURN';
+    } else if (lastTip.author.id === projectOwner.id) {
+        gameState = 'USER_TURN';
+    } else {
+        gameState = 'OWNER_TURN';
     }
+
+    spinnerEl.style.display = 'none';
+    updateUI();
 }
 
 function updateUI() {
@@ -167,6 +159,8 @@ async function handleBurnClick() {
         isSubmitting = false;
         updateUI(); // Re-enable button if needed
     } finally {
+        // Spinner is handled inside the websim dialog, so we might not need this.
+        // But just in case of other errors, let's keep it.
         spinnerEl.style.display = 'none';
     }
 }
@@ -175,10 +169,10 @@ function handleNewComment(data) {
     const newComment = data.comment;
     // We only care about new tip comments for game logic
     if (newComment.card_data?.type === 'tip_comment') {
-        allTipComments.unshift({ comment: newComment }); // Add to our full list
-        const tipAmount = newComment.card_data.credits_spent;
+        allTips.unshift(newComment); // Add to the beginning of our tips array
 
         // Update totals
+        const tipAmount = newComment.card_data.credits_spent;
         totalBurned += tipAmount / 2;
         if (newComment.author.id === projectOwner.id) {
             // Owner tipped, so they spent `tipAmount` and got half back. Net loss of half.
@@ -211,25 +205,24 @@ async function loadTipHistory() {
         const data = await response.json();
         
         commentsContainer.innerHTML = '';
-        allTipComments = data.comments.data;
+        allTips = data.comments.data.map(item => item.comment);
 
         // Reset totals before recalculating from history
         totalBurned = 0;
         totalEarned = 0;
 
-        if (data.comments.data.length === 0) {
+        if (allTips.length === 0) {
             commentsContainer.innerHTML = '<p>The burn history is empty.</p>';
+            leaderboardListEl.innerHTML = '<p>No players yet.</p>';
             updateTotalStats();
-            updateLeaderboard();
             return;
         }
 
         // The API returns newest first, so we reverse to process from oldest to newest
         // This keeps the display order as newest first.
-        const reversedComments = data.comments.data.slice().reverse();
+        const reversedComments = allTips.slice().reverse();
 
-        reversedComments.forEach(item => {
-            const comment = item.comment;
+        reversedComments.forEach(comment => {
             const tipAmount = comment.card_data?.credits_spent || 0;
 
             // Calculate totals
@@ -241,10 +234,12 @@ async function loadTipHistory() {
                 // User tipped, owner receives half.
                 totalEarned += tipAmount / 2;
             }
+        });
 
-            // Prepend to keep newest at the top
-            const commentEl = createCommentElement(comment);
-            commentsContainer.prepend(commentEl);
+        // Render comments (newest first)
+        allTips.forEach(comment => {
+             const commentEl = createCommentElement(comment);
+             commentsContainer.appendChild(commentEl);
         });
 
         updateTotalStats();
@@ -253,6 +248,7 @@ async function loadTipHistory() {
     } catch (error) {
         console.error("Error loading history:", error);
         commentsContainer.innerHTML = '<p class="error-message">Could not load burn history.</p>';
+        leaderboardListEl.innerHTML = '<p class="error-message">Could not load leaderboard.</p>';
     }
 }
 
@@ -303,46 +299,47 @@ function createCommentElement(comment) {
 }
 
 function updateLeaderboard() {
-    if (allTipComments.length === 0) {
-        leaderboardListEl.innerHTML = '<p>No one has burned credits yet.</p>';
+    const playerBurnStats = {};
+
+    allTips.forEach(comment => {
+        const authorId = comment.author.id;
+        const burnedAmount = (comment.card_data?.credits_spent || 0) / 2;
+
+        if (!playerBurnStats[authorId]) {
+            playerBurnStats[authorId] = {
+                id: authorId,
+                username: comment.author.username,
+                avatar_url: comment.author.avatar_url,
+                totalBurned: 0
+            };
+        }
+        playerBurnStats[authorId].totalBurned += burnedAmount;
+    });
+
+    const sortedPlayers = Object.values(playerBurnStats)
+        .sort((a, b) => b.totalBurned - a.totalBurned)
+        .slice(0, 10);
+
+    leaderboardListEl.innerHTML = '';
+    if (sortedPlayers.length === 0) {
+        leaderboardListEl.innerHTML = '<p>No players yet.</p>';
         return;
     }
 
-    const userBurns = {};
+    sortedPlayers.forEach((player, index) => {
+        const li = document.createElement('li');
+        li.classList.add('leaderboard-item');
+        const avatarUrl = player.avatar_url || `https://images.websim.com/avatar/${player.username}`;
 
-    allTipComments.forEach(item => {
-        const comment = item.comment;
-        const authorId = comment.author.id;
-        const tipAmount = comment.card_data?.credits_spent || 0;
-        const burnedAmount = tipAmount / 2;
-
-        if (!userBurns[authorId]) {
-            userBurns[authorId] = {
-                user: comment.author,
-                totalBurned: 0,
-            };
-        }
-        userBurns[authorId].totalBurned += burnedAmount;
-    });
-
-    const sortedUsers = Object.values(userBurns).sort((a, b) => b.totalBurned - a.totalBurned);
-    const topUsers = sortedUsers.slice(0, 10);
-
-    leaderboardListEl.innerHTML = '';
-
-    topUsers.forEach((entry, index) => {
-        const avatarUrl = entry.user.avatar_url || `https://images.websim.com/avatar/${entry.user.username}`;
-        const itemEl = document.createElement('div');
-        itemEl.classList.add('leaderboard-item');
-        itemEl.innerHTML = `
-            <div class="rank">${index + 1}.</div>
-            <div class="player-info">
-                <img src="${avatarUrl}" alt="${entry.user.username}'s avatar">
-                <span class="player-name">@${entry.user.username}</span>
+        li.innerHTML = `
+            <div class="leaderboard-rank">${index + 1}</div>
+            <div class="leaderboard-player">
+                <img src="${avatarUrl}" alt="${player.username}'s avatar">
+                <span>@${player.username}</span>
             </div>
-            <div class="burned-amount">🔥 ${Math.floor(entry.totalBurned)}</div>
+            <div class="leaderboard-burnt">🔥 ${Math.floor(player.totalBurned)}</div>
         `;
-        leaderboardListEl.appendChild(itemEl);
+        leaderboardListEl.appendChild(li);
     });
 }
 
