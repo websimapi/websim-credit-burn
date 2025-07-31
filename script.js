@@ -10,6 +10,7 @@ const commentsContainer = document.getElementById('comments-container');
 const actionErrorEl = document.getElementById('action-error');
 const spinnerEl = document.querySelector('.spinner');
 const actionHeaderEl = document.getElementById('action-header');
+const totalStatsEl = document.getElementById('total-stats');
 
 // --- State ---
 let projectId = null;
@@ -19,6 +20,8 @@ let isOwner = false;
 let gameState = 'INITIALIZING'; // INITIALIZING, USER_TURN, OWNER_TURN
 let lastTip = null;
 let isSubmitting = false;
+let totalBurned = 0;
+let totalEarned = 0;
 
 // --- Main ---
 async function init() {
@@ -119,6 +122,19 @@ function updateUI() {
     }
 }
 
+function updateTotalStats() {
+    totalStatsEl.innerHTML = `
+        <div class="stat-item">
+            <div class="label">Total Burned</div>
+            <div class="value burned">🔥 ${Math.floor(totalBurned)}</div>
+        </div>
+        <div class="stat-item">
+            <div class="label">Total Earned by @${projectOwner?.username || 'Owner'}</div>
+            <div class="value earned">💰 ${Math.floor(totalEarned)}</div>
+        </div>
+    `;
+}
+
 // --- API & Event Handlers ---
 async function handleBurnClick() {
     if (isSubmitting) return;
@@ -157,6 +173,16 @@ function handleNewComment(data) {
     const newComment = data.comment;
     // We only care about new tip comments for game logic
     if (newComment.card_data?.type === 'tip_comment') {
+        const tipAmount = newComment.card_data.credits_spent;
+
+        // Update totals
+        totalBurned += tipAmount / 2;
+        if (newComment.author.id !== projectOwner.id) {
+            totalEarned += tipAmount / 2;
+        }
+        updateTotalStats();
+
+        // Update game state
         lastTip = newComment;
         if (newComment.author.id === projectOwner.id) {
             gameState = 'USER_TURN';
@@ -177,16 +203,37 @@ async function loadTipHistory() {
         const data = await response.json();
         
         commentsContainer.innerHTML = '';
+
+        // Reset totals before recalculating from history
+        totalBurned = 0;
+        totalEarned = 0;
+
         if (data.comments.data.length === 0) {
             commentsContainer.innerHTML = '<p>The burn history is empty.</p>';
+            updateTotalStats();
             return;
         }
 
-        data.comments.data.forEach(item => {
+        // The API returns newest first, so we reverse to process from oldest to newest
+        // This keeps the display order as newest first.
+        const reversedComments = data.comments.data.slice().reverse();
+
+        reversedComments.forEach(item => {
             const comment = item.comment;
+            const tipAmount = comment.card_data?.credits_spent || 0;
+
+            // Calculate totals
+            totalBurned += tipAmount / 2;
+            if (comment.author.id !== projectOwner.id) {
+                totalEarned += tipAmount / 2;
+            }
+
+            // Prepend to keep newest at the top
             const commentEl = createCommentElement(comment);
-            commentsContainer.appendChild(commentEl);
+            commentsContainer.prepend(commentEl);
         });
+
+        updateTotalStats();
 
     } catch (error) {
         console.error("Error loading history:", error);

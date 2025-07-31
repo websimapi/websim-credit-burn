@@ -47,6 +47,37 @@ header h1 {
     margin: 0;
 }
 
+#total-stats {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    font-family: var(--font-header);
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-item .label {
+    font-size: 0.9em;
+    color: var(--text-muted-color);
+    margin-bottom: 4px;
+}
+
+.stat-item .value {
+    font-size: 1.5em;
+    font-weight: 700;
+}
+
+.stat-item .value.burned {
+    color: var(--red-color);
+}
+
+.stat-item .value.earned {
+    color: var(--owner-color);
+}
+
 header p {
     color: var(--text-muted-color);
     font-size: 0.9em;
