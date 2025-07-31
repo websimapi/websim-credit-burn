@@ -11,6 +11,7 @@ const actionErrorEl = document.getElementById('action-error');
 const spinnerEl = document.querySelector('.spinner');
 const actionHeaderEl = document.getElementById('action-header');
 const totalStatsEl = document.getElementById('total-stats');
+const leaderboardListEl = document.getElementById('leaderboard-list');
 
 // --- State ---
 let projectId = null;
@@ -22,6 +23,7 @@ let lastTip = null;
 let isSubmitting = false;
 let totalBurned = 0;
 let totalEarned = 0;
+let allTipComments = [];
 
 // --- Main ---
 async function init() {
@@ -173,6 +175,7 @@ function handleNewComment(data) {
     const newComment = data.comment;
     // We only care about new tip comments for game logic
     if (newComment.card_data?.type === 'tip_comment') {
+        allTipComments.unshift({ comment: newComment }); // Add to our full list
         const tipAmount = newComment.card_data.credits_spent;
 
         // Update totals
@@ -196,6 +199,7 @@ function handleNewComment(data) {
         isSubmitting = false;
         prependComment(newComment);
         updateUI();
+        updateLeaderboard();
     }
 }
 
@@ -207,6 +211,7 @@ async function loadTipHistory() {
         const data = await response.json();
         
         commentsContainer.innerHTML = '';
+        allTipComments = data.comments.data;
 
         // Reset totals before recalculating from history
         totalBurned = 0;
@@ -215,6 +220,7 @@ async function loadTipHistory() {
         if (data.comments.data.length === 0) {
             commentsContainer.innerHTML = '<p>The burn history is empty.</p>';
             updateTotalStats();
+            updateLeaderboard();
             return;
         }
 
@@ -242,6 +248,7 @@ async function loadTipHistory() {
         });
 
         updateTotalStats();
+        updateLeaderboard();
 
     } catch (error) {
         console.error("Error loading history:", error);
@@ -293,6 +300,50 @@ function createCommentElement(comment) {
         <div class="comment-date">${new Date(comment.created_at).toLocaleString()}</div>
     `;
     return div;
+}
+
+function updateLeaderboard() {
+    if (allTipComments.length === 0) {
+        leaderboardListEl.innerHTML = '<p>No one has burned credits yet.</p>';
+        return;
+    }
+
+    const userBurns = {};
+
+    allTipComments.forEach(item => {
+        const comment = item.comment;
+        const authorId = comment.author.id;
+        const tipAmount = comment.card_data?.credits_spent || 0;
+        const burnedAmount = tipAmount / 2;
+
+        if (!userBurns[authorId]) {
+            userBurns[authorId] = {
+                user: comment.author,
+                totalBurned: 0,
+            };
+        }
+        userBurns[authorId].totalBurned += burnedAmount;
+    });
+
+    const sortedUsers = Object.values(userBurns).sort((a, b) => b.totalBurned - a.totalBurned);
+    const topUsers = sortedUsers.slice(0, 10);
+
+    leaderboardListEl.innerHTML = '';
+
+    topUsers.forEach((entry, index) => {
+        const avatarUrl = entry.user.avatar_url || `https://images.websim.com/avatar/${entry.user.username}`;
+        const itemEl = document.createElement('div');
+        itemEl.classList.add('leaderboard-item');
+        itemEl.innerHTML = `
+            <div class="rank">${index + 1}.</div>
+            <div class="player-info">
+                <img src="${avatarUrl}" alt="${entry.user.username}'s avatar">
+                <span class="player-name">@${entry.user.username}</span>
+            </div>
+            <div class="burned-amount">🔥 ${Math.floor(entry.totalBurned)}</div>
+        `;
+        leaderboardListEl.appendChild(itemEl);
+    });
 }
 
 // --- Start the App ---

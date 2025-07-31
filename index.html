@@ -8,43 +8,52 @@
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div id="app">
-        <header>
-            <h1>🔥 Credit Burn 🔥</h1>
-            <p>A silly game of burning credits. A user tips, then the owner must match. 50% of every tip is burned, 50% goes to the project owner.</p>
-            <div id="total-stats">
-                <!-- Totals will be rendered here by script.js -->
-            </div>
-        </header>
+    <div id="page-wrapper">
+        <div id="app">
+            <header>
+                <h1>🔥 Credit Burn 🔥</h1>
+                <p>A silly game of burning credits. A user tips, then the owner must match. 50% of every tip is burned, 50% goes to the project owner.</p>
+                <div id="total-stats">
+                    <!-- Totals will be rendered here by script.js -->
+                </div>
+            </header>
 
-        <div id="game-state">
-            <div id="status-indicator">
-                <div class="spinner"></div>
-                <span id="status-text">Initializing...</span>
+            <div id="game-state">
+                <div id="status-indicator">
+                    <div class="spinner"></div>
+                    <span id="status-text">Initializing...</span>
+                </div>
+                <div id="last-tip-info"></div>
             </div>
-            <div id="last-tip-info"></div>
-        </div>
-        
-        <div id="action-area">
-             <div id="action-header"></div>
-            <textarea id="comment-input" placeholder="Add a message to your burn... (optional)"></textarea>
-            <button id="burn-button" disabled>
-                <span class="button-icon">🔥</span>
-                <span class="button-text">Burn Credits</span>
-            </button>
-            <p id="action-error" class="error-message"></p>
-        </div>
-
-        <div id="burn-history">
-            <h2>Burn History</h2>
-            <div id="comments-container">
-                <p>Loading history...</p>
+            
+            <div id="action-area">
+                 <div id="action-header"></div>
+                <textarea id="comment-input" placeholder="Add a message to your burn... (optional)"></textarea>
+                <button id="burn-button" disabled>
+                    <span class="button-icon">🔥</span>
+                    <span class="button-text">Burn Credits</span>
+                </button>
+                <p id="action-error" class="error-message"></p>
             </div>
-        </div>
 
-        <footer>
-            <p>Made with the Websim Comments API</p>
-        </footer>
+            <div id="burn-history">
+                <h2>Burn History</h2>
+                <div id="comments-container">
+                    <p>Loading history...</p>
+                </div>
+            </div>
+
+            <footer>
+                <p>Made with the Websim Comments API</p>
+            </footer>
+        </div>
+    </div>
+
+    <div id="leaderboard-wrapper">
+        <h2>🏆 Most Burnt 🏆</h2>
+        <div id="leaderboard-list">
+            <p>Loading leaderboard...</p>
+        </div>
     </div>
 
     <script type="importmap">
